@@ -1,0 +1,134 @@
+String ssid     = "Simulator Wifi";  // SSID to connect to
+String password = "";
+String host     = "api.thingspeak.com"; 
+const int httpPort   = 80;
+String uri1     = "/update?api_key=NK3Z6HXCNB339B4Q&field1=";
+String uril1    = "&field2=";
+String uril2    = "&field3=";
+
+
+int setupESP8266(void) {
+  // Start our ESP8266 Serial Communication
+  Serial.begin(115200);   // Serial connection over USB to computer
+  Serial.println("AT");   // Serial connection on Tx / Rx port to ESP8266
+  delay(10);        // Wait a little for the ESP to respond
+  if (!Serial.find("OK")) return 1;
+    
+ 
+  Serial.println("AT+CWJAP=\"" + ssid + "\",\"" + password + "\"");
+  delay(10);        // Wait a little for the ESP to respond
+  if (!Serial.find("OK")) return 2;
+  
+  // Open TCP connection to the host:
+  Serial.println("AT+CIPSTART=\"TCP\",\"" + host + "\"," + httpPort);
+  delay(50);        // Wait a little for the ESP to respond
+  if (!Serial.find("OK")) return 3;
+  
+  return 0;
+}
+
+void send_dist(void) {
+  
+  int temp = dist();
+  int temp1 = temperature();
+  int temp2 = tilt();
+  
+  // Construct our HTTP call
+  String httpPacket = "GET " + uri1 + String(temp) + uril1 + String(temp1) + uril2 + String(temp2) + " HTTP/1.1\r\nHost: " + host + "\r\n\r\n";
+  int length = httpPacket.length();
+  
+  // Send our message length
+  Serial.print("AT+CIPSEND=");
+  Serial.println(length);
+  delay(10); // Wait a little for the ESP to respond if (!Serial.find(">")) return -1;
+
+  // Send our http request
+  Serial.print(httpPacket);
+  delay(10); // Wait a little for the ESP to respond
+  if (!Serial.find("SEND OK\r\n")) return;
+  
+  
+}
+void loopHigh(void){
+  int temp = dist();
+  int temp1 = temperature();
+  int temp2 = tilt();
+  if(temp < 200 || temp1 > 38 || temp2 == 1){
+    tone(8,294,1000);
+    delay(1000);
+    send_dist();
+  }
+}
+
+
+void setup(){
+  setupESP8266();
+  pinMode(8,OUTPUT);
+}
+
+void loop() {
+  dist(); //Returning distance
+  temperature();
+  tilt();
+  loopHigh(); 
+  delay(10000);
+}
+
+
+int dist()
+{  const int pingPin = 7;
+  long duration, cm;
+  pinMode(pingPin, OUTPUT);
+  digitalWrite(pingPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pingPin, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(pingPin, LOW);
+
+  
+  pinMode(pingPin, INPUT);
+  duration = pulseIn(pingPin, HIGH);
+  cm = microsecondsToCentimeters(duration);
+  Serial.print("Distance: ");
+  Serial.print(cm);
+  Serial.print(" m");
+  Serial.println();
+ return cm;
+  
+  delay(100);
+}
+
+int temperature()
+{
+  const int tempin = A0;
+  int reading = analogRead(tempin);
+  float voltage = reading * 5.0;
+  voltage /= 1024.0;
+  float temperatureC = (voltage - 0.5) * 100 ;
+  return temperatureC;
+
+  delay(100);
+}
+
+
+int tilt()
+{
+  const int sensorpin = 2;
+  int led = 13;
+  pinMode(sensorpin, INPUT);
+  pinMode(led, OUTPUT);
+  int reading1 = digitalRead(sensorpin);
+  if (reading1)
+    digitalWrite(led, HIGH);
+  else
+    digitalWrite(led, LOW);
+  return reading1;
+
+  delay(100);
+}
+
+
+long microsecondsToCentimeters(long microseconds) {
+  return microseconds / 29 / 2;
+
+}

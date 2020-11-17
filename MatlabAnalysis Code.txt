@@ -1,0 +1,21 @@
+% Enter your MATLAB Code below 
+readChId = 1202038; 
+writeChId = 1202038; 
+writeKey = 'NK3Z6HXCNB339B4Q'; 
+[temperature,time] = thingSpeakRead(readChId,'Fields',2,'NumPoints',5); 
+distance = thingSpeakRead(readChId,'Fields',1,'NumPoints',5); 
+urgent = thingSpeakRead(readChId,'Fields',3,'NumPoints',1); 
+avg_temperature = mean(temperature) 
+avg_distance = mean(distance) 
+r = 'Fine'; 
+if (avg_temperature>38) 
+r='Fever'; 
+end 
+if (avg_distance<200) 
+r='Make_some_distance'; 
+end 
+if (urgent==0)  
+r='Emergency'; 
+end 
+r 
+webwrite('https://api.thingspeak.com/update','api_key',wr iteKey,'status',r);
