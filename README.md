@@ -1,7 +1,7 @@
 # Patient-Health-Monitoring-System-Using-IOT
 My team has created a project under "IOT Fundamentals" course that is using ThingSpeak, IFTTT, ArduinoUNO, Twitter and Flask (to show the data on a created webpage using JSON).
 
-Methodologu ---
+Methodology ---
 
 Here in this project, we will make an IoT based Health Monitoring System which records the patient body temperature, movement and the distance from the other patients. After 
 sensing these readings from the sensors controlled by arduino, we send it to the our own created ThingSpeak channel to visualize it in different field graphs & for any further. 
